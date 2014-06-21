@@ -1,0 +1,42 @@
+{
+  "name": "ffwd-net",
+  "version": "0.0.0",
+  "main": "client/scripts/index.js",
+  "keywords": [
+    "ffwdfeature"
+  ],
+  "dependencies": {
+    "amdefine": "^0.1.0",
+    "backbone": "^1.1.2",
+    "body-parser": "^1.2.0",
+    "compression": "^1.0.2",
+    "connect-timeout": "^1.1.0",
+    "consolidate": "^0.10.0",
+    "cookie-parser": "^1.1.0",
+    "cookie-session": "^1.0.2",
+    "csurf": "^1.2.0",
+    "errorhandler": "^1.0.1",
+    "express": "^4.2.0",
+    "express-session": "^1.1.0",
+    "method-override": "^1.0.1",
+    "morgan": "^1.0.1",
+    "underscore": "^1.6.0",
+    "vhost": "^1.0.0"
+  },
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "grunt": "^0.4.4",
+    "grunt-contrib-clean": "^0.5.0",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-requirejs": "^0.4.4",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-express": "^1.3.5",
+    "grunt-jsdoc": "^0.5.4",
+    "grunt-newer": "^0.7.0",
+    "jquery": "^2.1.1",
+    "load-grunt-tasks": "^0.4.0",
+    "mocha": "^1.18.2",
+    "supertest": "^0.12.1",
+    "time-grunt": "^0.3.1"
+  }
+}
