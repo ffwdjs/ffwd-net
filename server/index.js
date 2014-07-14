@@ -17,7 +17,6 @@
 
 var path        = require('path');
 var express     = require('express');
-var router      = express.Router();
 var path        = require('path');
 var utils       = require('ffwd-utils/server');
 var _           = utils._;
@@ -49,7 +48,7 @@ function staticDirs(conf, app) {
 function useFeature(app, feature, name) {
   if (_.isArray(feature)) {
     if (_.isString(feature[0]) || _.isFunction(feature[0])) {
-      return app.use.apply(app, features);
+      return app.use.apply(app, feature);
     }
 
     return _.each(feature, function(feat) {
@@ -60,9 +59,32 @@ function useFeature(app, feature, name) {
   app.use(feature.request || noopReq);
 }
 
+function noop(){};
+
+var silentLogger = {
+  warn: noop,
+  info: noop,
+  log: noop,
+  debug: noop,
+  trace: noop,
+  error: noop
+};
+
+
 module.exports = function(settings) {
   settings = settings || {};
+
   var app = express();
+  // app.logger = (settings.logger === 'silent' || settings.silent) ?
+  //               silentLogger :
+  //               settings.logger || console;
+
+  var server = require('http').createServer(app);
+  server.use = function() {
+    app.use.apply(app, arguments);
+  };
+  
+  var io = app.io = require('socket.io').listen(server);
 
   appSettings = settings;
   
@@ -80,11 +102,9 @@ module.exports = function(settings) {
     googleAnalyticsUA:  ''
   });
 
-  var params = appSettings.params;
-
   var morgan          = require('morgan');
   var bodyParser      = require('body-parser');
-  var methodOverride  = require('method-override');
+  // var methodOverride  = require('method-override');
   var errorHandler    = require('errorhandler');
 
   var engines         = require('consolidate');
@@ -96,7 +116,8 @@ module.exports = function(settings) {
 
   app.set('port', appSettings.port);
 
-  app.set('views', path.join(projectDir, appSettings.views));
+  // app.set('views', path.join(projectDir, appSettings.views));
+  app.set('views', appSettings.views);
 
   app.set('appName', appSettings.appName);
 
@@ -110,18 +131,25 @@ module.exports = function(settings) {
 
 
   app.use(morgan(appSettings.logLevel));
-  app.use(bodyParser());
-  app.use(methodOverride());
+  // app.use(bodyParser());
+  // app.use(methodOverride());
+  app.use(bodyParser.urlencoded());
+  app.use(bodyParser.json());
+  // app.use(bodyParser.urlencoded({
+  //   extended: true
+  // }));
 
   // set default value for some response locals
   app.use(function(req, res, next) {
+    // res.locals = _.defaults(res.locals || {}, {
     _.defaults(res.locals, {
-      language:           settings.language,
-      basePath:           settings.basePath,
-      appName:            settings.appName,
-      googleAnalyticsUA:  settings.googleAnalyticsUA,
+      language:           appSettings.language,
+      basePath:           appSettings.basePath,
+      appName:            appSettings.appName,
+      googleAnalyticsUA:  appSettings.googleAnalyticsUA,
       title:              '',
-      description:        ''
+      description:        '',
+      navigation:         {}
     });
 
     next();
@@ -131,7 +159,7 @@ module.exports = function(settings) {
   var features = app.features = utils.loadFeatures(appSettings.features, {
     subject: app.features
   });
-  
+
   // compile the settings
   _.each(features, function(feature, name) {
     
@@ -158,9 +186,9 @@ module.exports = function(settings) {
   // http://expressjs.com/4x/api.html#app.locals
   _.extend(app.locals, appSettings.locals);
 
-  if (appSettings.env === 'development') {
+  if (appSettings.env === 'dev') {
     app.use(errorHandler());
   }
 
-  return app;
+  return server;
 };
