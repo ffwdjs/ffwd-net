@@ -15,34 +15,25 @@
  * @module server
  */
 
-var path        = require('path');
-var express     = require('express');
-var path        = require('path');
-var utils       = require('ffwd-utils/server');
-var _           = utils._;
+var path          = require('path');
+var express       = require('express');
+var path          = require('path');
+var http          = require('http');
+var utils         = require('ffwd-utils/server');
+var _             = utils._;
+var morgan        = require('morgan');
+var bodyParser    = require('body-parser');
+var errorHandler  = require('errorhandler');
+var engines       = require('consolidate');
+var socketIo      = require('socket.io');
 
-var projectDir  = process.cwd();//path.resolve(__dirname, '..');
 
-var appSettings = {
-  appDir: projectDir
-};
+var projectDir    = process.cwd();
+
+var appSettings   = { appDir: projectDir };
 
 function noopReq(req, res, next) {
   next();
-}
-
-function staticDirs(conf, app) {
-  _.each(conf.staticContent || {}, function(route, dir) {
-    var directory = path.join(conf.projectDir, dir);
-    var middleware = express.static(directory);
-
-    if (route) {
-      app.use(route, middleware);
-    }
-    else {
-      app.use(middleware);
-    }
-  });
 }
 
 function useFeature(app, feature, name) {
@@ -59,99 +50,141 @@ function useFeature(app, feature, name) {
   app.use(feature.request || noopReq);
 }
 
-function noop(){};
 
-var silentLogger = {
-  warn: noop,
-  info: noop,
-  log: noop,
-  debug: noop,
-  trace: noop,
-  error: noop
-};
+
 
 
 module.exports = function(settings) {
-  settings = settings || {};
+  settings = _.clone(settings || {});
 
-  var app = express();
-  // app.logger = (settings.logger === 'silent' || settings.silent) ?
-  //               silentLogger :
-  //               settings.logger || console;
 
-  var server = require('http').createServer(app);
-  server.use = function() {
-    app.use.apply(app, arguments);
-  };
-  
-  var io = app.io = require('socket.io').listen(server);
+  var app             = settings.app || express();
+  var server          = settings.server || http.Server(app);
+  var io              = settings.io || socketIo(server);
 
-  appSettings = settings;
-  
-  _.defaults(appSettings, {
-    port:               settings.port || process.env.PORT || 3000,
-    livereloadPort:     settings.livereloadPort || parseInt(settings.port || process.env.PORT || 3000) + 1,
+
+  app._io = io;
+  app._server = server;
+
+
+
+  _.defaults(settings, {
+    port:               process.env.PORT || 3000,
+    livereloadPort:     parseInt(settings.port || process.env.NODE_PORT || 3000) + 1,
+    _styles:            {},
     projectDir:         projectDir,
     logLevel:           'dev',
     views:              'client/templates',
-    language:           'en-US',
     basePath:           '/',
-    locals:             {},
     staticContent:      { 'dist': '/' },
     appName:            'FFWD',
-    googleAnalyticsUA:  ''
+
+    page:               {},
+    i18n:               {}
   });
 
-  var morgan          = require('morgan');
-  var bodyParser      = require('body-parser');
-  // var methodOverride  = require('method-override');
-  var errorHandler    = require('errorhandler');
+  _.defaults(settings._styles, {
+    importPaths: [
+      path.resolve(__dirname, './../client/styles'),
+      path.resolve(__dirname, './../client/bower_components/bootstrap/less')
+    ],
+    // filename: path.resolve(__dirname, './../client/styles/styles.less'),
+    filename: 'styles.less',
+    filepath: path.resolve(__dirname, './../client/styles/styles.less')
+  });
 
-  var engines         = require('consolidate');
+  _.defaults(settings.page, {
+    _links: {},
+    _embedded: {},
+    appName: 'FFWD',
+    title: '',
+    description: '',
+    author: '',
+    body: ''
+  });
+
+  _.defaults(settings.i18n, {
+    langCode: 'en',
+    langName: 'English',
+    langNameEn: 'English'
+  });
+
+
+  
+  
+
+  appSettings = settings;
+
 
   // app.engine('hbs', engines.handlebars);
   app.engine('tpl', engines.underscore);
 
   app.set('view engine', 'tpl');
 
-  app.set('port', appSettings.port);
+  app.set('port', settings.port);
 
-  // app.set('views', path.join(projectDir, appSettings.views));
-  app.set('views', appSettings.views);
+  // app.set('views', path.join(projectDir, settings.views));
+  app.set('views', settings.views);
 
-  app.set('appName', appSettings.appName);
+  app.set('appName', settings.appName);
+
+  // [
+  //   'port',
+  //   'livereloadPort',
+  //   'basePath'
+  // ].forEach(function() {
+  //   app.set()
+  // });
 
 
 
-  _.each(appSettings.locals, app.locals, app);
+  _.each(settings.locals, app.locals, app);
 
 
   // serves 
-  staticDirs(appSettings, app);
+  utils.staticContent(settings.staticContent, app);
 
 
-  app.use(morgan(appSettings.logLevel));
-  // app.use(bodyParser());
-  // app.use(methodOverride());
-  app.use(bodyParser.urlencoded());
+  app.use(morgan(settings.logLevel));
+
   app.use(bodyParser.json());
-  // app.use(bodyParser.urlencoded({
-  //   extended: true
-  // }));
+
+  app.use(bodyParser.urlencoded({
+    extended: true
+  }));
 
   // set default value for some response locals
   app.use(function(req, res, next) {
-    // res.locals = _.defaults(res.locals || {}, {
-    _.defaults(res.locals, {
-      language:           appSettings.language,
-      basePath:           appSettings.basePath,
-      appName:            appSettings.appName,
-      googleAnalyticsUA:  appSettings.googleAnalyticsUA,
-      title:              '',
-      description:        '',
-      navigation:         {}
-    });
+    res.locals._embedded = {};
+    res.locals._links = {};
+    
+    res.halLink = function(name, info) {
+      if (!_.isUndefined(info)) {
+        if (!info) {
+          delete res.locals._links[name];
+        }
+        else {
+          res.locals._links[name] = _.extend(res.locals._links[name] || {}, info);
+        }
+      }
+      return res.locals._links[name];
+    };
 
+    res.halEmbedded = function(name, value) {
+      if (!_.isUndefined(value)) {
+        if (!value) {
+          delete res.locals._embedded[name];
+        }
+        else {
+          res.locals._embedded[name] = value;
+        }
+      }
+      
+      return utils.atPath(res.locals._embedded, name);
+    };
+
+    res.locals.i18n = _.clone(settings.i18n);
+    res.locals.page = _.clone(settings.page);
     next();
   });
 
@@ -188,6 +221,12 @@ module.exports = function(settings) {
 
   if (appSettings.env === 'dev') {
     app.use(errorHandler());
+  }
+
+  if (settings.useServer) {
+    server.use = function() {
+      app.use.apply(app, arguments);
+    };
   }
 
   return server;
