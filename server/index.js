@@ -36,6 +36,8 @@ function noopReq(req, res, next) {
   next();
 }
 
+
+
 function useFeature(app, feature, name) {
   if (_.isArray(feature)) {
     if (_.isString(feature[0]) || _.isFunction(feature[0])) {
@@ -46,8 +48,9 @@ function useFeature(app, feature, name) {
       useFeature(app, feat, name);
     });
   }
-
-  app.use(feature.request || noopReq);
+  else {
+    app.use(feature.request || noopReq);
+  }
 }
 
 
@@ -173,14 +176,14 @@ module.exports = function(settings) {
     res.halEmbedded = function(name, value) {
       if (!_.isUndefined(value)) {
         if (!value) {
-          delete res.locals._embedded[name];
+          res.locals._embedded[name];
         }
         else {
-          res.locals._embedded[name] = value;
+          utils.atPath(.res.locals._embedded, name, value);
         }
       }
-      
-      return utils.atPath(res.locals._embedded, name);
+
+      return utils.atPath(res.locals._embedded);
     };
 
     res.locals.i18n = _.clone(settings.i18n);
