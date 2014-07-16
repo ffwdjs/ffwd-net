@@ -68,11 +68,11 @@ module.exports = function(settings) {
 
   app._io = io;
   app._server = server;
-
+  server._app = app;
 
 
   _.defaults(settings, {
-    port:               process.env.PORT || 3000,
+    port:               process.env.NODE_PORT || 3000,
     livereloadPort:     parseInt(settings.port || process.env.NODE_PORT || 3000) + 1,
     _styles:            {},
     projectDir:         projectDir,
@@ -179,7 +179,7 @@ module.exports = function(settings) {
           res.locals._embedded[name];
         }
         else {
-          utils.atPath(.res.locals._embedded, name, value);
+          utils.atPath(res.locals._embedded, name, value);
         }
       }
 
@@ -226,11 +226,27 @@ module.exports = function(settings) {
     app.use(errorHandler());
   }
 
-  if (settings.useServer) {
-    server.use = function() {
-      app.use.apply(app, arguments);
-    };
-  }
+  server.use = function() {
+    app.use.apply(app, arguments);
+  };
+
+
+
+  server.on('listening', function(){
+    // var clientSocket = require('socket.io-client')('http://127.0.0.1:9000');
+    // // var clientSocket = require('socket.io-client')('http://jk-bx.net');
+
+    // clientSocket.on('gh', function(ghEvName) {
+    //   console.info('server - gh:'+ ghEvName);
+    // });
+
+    // clientSocket.on('gh:issues', function() {
+    //   console.info('server - gh:issues', arguments);
+    // });
+    console.info('server is listenning on '+ app.get('port'));
+  });
+
+  console.info('port', app.get('port'));
 
   return server;
 };
