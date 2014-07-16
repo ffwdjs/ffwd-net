@@ -5,6 +5,10 @@
   "keywords": [
     "ffwdfeature"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zeropaper/ffwd-net.git"
+  },
   "dependencies": {
     "amdefine": "^0.1.0",
     "backbone": "^1.1.2",
