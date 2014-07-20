@@ -1,16 +1,16 @@
-<!doctype html>
-<!--[if lt IE 7]>      <html lang="<%= language  %>" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html lang="<%= language  %>" class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html lang="<%= language  %>" class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html lang="<%= language  %>" class="no-js"> <!--<![endif]-->
+<!doctype html><!-- ffwd-net/client/templates/default.tpl -->
+<!--[if lt IE 7]>      <html lang="<%- i18n.langCode  %>" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html lang="<%- i18n.langCode  %>" class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html lang="<%- i18n.langCode  %>" class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="<%- i18n.langCode  %>" class="no-js"> <!--<![endif]-->
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
     <base href="/">
-    <title><%- _.compact([title, appName]).join('|')  %></title>
-    <meta name="description" content="<%= description %>">
+    <title><%- _.compact([page.title, page.appName]).join('|')  %></title>
+    <meta name="description" content="<%= page.description %>">
     <meta name="viewport" content="width=device-width">
 
     <link rel="icon" href="images/icons/favicon.ico" type="image/x-icon">
@@ -23,11 +23,11 @@
     <!-- For non-Retina iPhone, iPod Touch, and Android 2.1+ devices: -->
     <link rel="apple-touch-icon-precomposed" href="images/icons/apple-touch-icon-precomposed.png">
 
-    <!-- 
+    <!--
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,400,300' rel='stylesheet' type='text/css'>
     -->
     <link rel="stylesheet" href="styles/styles.css">
-    <!-- 
+    <!--
     <script type="text/javascript" src="/scripts/modernizr.js"></script>
     -->
   </head>
@@ -46,14 +46,14 @@
       <div class="row">
         <div class="sidebar column medium-3">
           <h1 class="logo">
-            <a href="#"><%- appName %></a>
+            <a href="#"><%- page.appName %></a>
           </h1>
           <nav>
             <ul>
               <% _.each(navigation, function(link, linkPath) { %>
               <li>
                 <a href="<%- linkPath %>"><%- link.title %></a>
-                
+
                 <% if (link.links) { %>
                 <ul>
                   <% _.each(link.links, function(subLink, subPath) { %>
@@ -78,12 +78,12 @@
               <% }) %>
             </ul>
 
-            <h1><%- title %></h1>
+            <h1><%- page.title %></h1>
           </header>
 
-          
+
           <div class="content container">
-            <%= body %>
+            <%= page.body %>
           </div>
         </section>
       </div>
@@ -92,26 +92,26 @@
       <footer class="row page">
         <nav>
           <ul>
-            
+
           </ul>
         </nav>
       </footer>
     </div>
 
-    
-    <% if (googleAnalyticsUA) { %>
+
+    <% if (page.googleAnalyticsUA) { %>
     <script>
        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-       ga('create', '<%- googleAnalyticsUA %>');
+       ga('create', '<%- page.googleAnalyticsUA %>');
        ga('send', 'pageview');
     </script>
     <% } %>
 
-    
+
     <script data-main="scripts/index.js" src="scripts/deps.js"></script>
 
   </body>

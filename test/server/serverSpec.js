@@ -20,7 +20,7 @@ function stackPutz(err) {
   console.warn((''+err.stack).split(cwd).join('.'));
 }
 
-      
+
 var counter = 0;
 function addCounter(req, res, next) {
   counter++;
@@ -30,12 +30,6 @@ function addCounter(req, res, next) {
 
 function sayHello(who) {
   return function(req, res, next) {
-    console.info('res.send', res.send);
-    expect(res.locals).to.have.keys([
-      'language',
-      'title',
-      'description'
-    ]);
     res.send(who +' says hello!');
   }
 }
@@ -82,7 +76,7 @@ function feat2() {
 
 
 
-describe('The web server', function() {
+describe('ffwd-net/server', function() {
   var app, server;
   describe('module', function() {
     it('loads', function() {
@@ -155,7 +149,7 @@ describe('The web server', function() {
         });
       }
 
-      
+
       it('initializes', function() {
         expect(initialize).not.to.throwError(stackPutz);
       });
@@ -174,7 +168,7 @@ describe('The web server', function() {
           });
       });
 
-      
+
       it('serves GET /feat1', function(done) {
         request(featuredApp)
           .get('/feat1')
@@ -188,7 +182,7 @@ describe('The web server', function() {
           });
       });
 
-      
+
       it('does not serve everything', function(done) {
         request(featuredApp)
           .get('/that-does-not-exists')
